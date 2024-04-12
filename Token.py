@@ -19,8 +19,6 @@ class TokenDict:
         self.d = {
             '{' : ['Punctuation', 'LBrace'],
             '}' : ['Punctuation', 'RBrace'],
-            '[' : ['Punctuation', 'LBracket'],
-            ']' : ['Punctuation', 'RBracket'],
             '(' : ['Punctuation', 'LParen'],
             ')' : ['Punctuation', 'RParen'],
             ',' : ['Punctuation', 'Comma'],

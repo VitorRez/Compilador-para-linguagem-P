@@ -5,9 +5,10 @@ def LexicalAnalyzer(filename):
     TD = TokenDict()
     TokenP = TokenPile()
 
-    selfLoop = ["{","}","[","]","(",")",",",";",":","+","*","/"]
+    selfLoop = ["{","}","(",")",",",";",":","+","*","/"]
+    knownCharacters = ["{","}","(",")",",",";",":","+","-","*","/","=","!",">","<","."," ","\n",'"']
 
-    lineNum = 0
+    lineNum = 1
 
     with open(filename, 'r') as file:
 
@@ -19,6 +20,10 @@ def LexicalAnalyzer(filename):
 
                 if line[index] in selfLoop:
                     token = Token(TD.d[line[index]][0], TD.d[line[index]][1], lineNum)
+                    TokenP.addToPile(token)
+
+                if line[index] not in knownCharacters and not line[index].isalpha() and not line[index].isnumeric():
+                    token = Token('Error', "Unknown char " + line[index], lineNum)
                     TokenP.addToPile(token)
 
                 if line[index] == '=':
@@ -132,7 +137,8 @@ def LexicalAnalyzer(filename):
         
     
     for p in TokenP.pile:
-        print(p.tokenind, p.lexema, p.num_linha)
+        if(p.tokenind == "Error"):
+            print(p.tokenind, p.lexema, p.num_linha)
                 
 
-LexicalAnalyzer("tests/calculadora.p")
+LexicalAnalyzer("tests/lexical_error.p")
