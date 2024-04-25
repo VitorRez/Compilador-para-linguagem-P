@@ -6,7 +6,7 @@ def LexicalAnalyzer(filename):
     TokenP = TokenPile()
 
     selfLoop = ["{","}","(",")",",",";",":","+","*","/"]
-    knownCharacters = ["{","}","(",")",",",";",":","+","-","*","/","=","!",">","<","."," ","\n",'"']
+    knownCharacters = ["{","}","(",")",",",";",":","+","-","*","/","=","!",">","<","."," ","\n",'"',"'"]
 
     lineNum = 1
 
@@ -28,47 +28,47 @@ def LexicalAnalyzer(filename):
 
                 if line[index] == '=':
                     if line[index+1] == '=':
-                        token = Token('Operators', 'Equal', lineNum)
+                        token = Token('Equal', '==', lineNum)
                         TokenP.addToPile(token)
                         index += 1
                     else:
-                        token = Token('Operators', 'Assign', lineNum)
+                        token = Token('Assign', '=', lineNum)
                         TokenP.addToPile(token)
 
                 if line[index] == '!':
                     if line[index+1] == '=':
-                        token = Token('Operators', 'NotEqual', lineNum)
+                        token = Token('NotEqual', '!=', lineNum)
                         TokenP.addToPile(token)
                         index += 1
                     else:
-                        token = Token('Error', 'Não sei ;-;', lineNum)
+                        token = Token('Error', 'Unknown char !', lineNum)
                         TokenP.addToPile(token)
                 
                 if line[index] == '<':
                     if line[index+1] == '=':
-                        token = Token('Operators', 'LessThanEqual', lineNum)
+                        token = Token('LessThanEqual', '<=', lineNum)
                         TokenP.addToPile(token)
                         index += 1
                     else:
-                        token = Token('Operators', 'LessThan', lineNum)
+                        token = Token('LessThan', '<', lineNum)
                         TokenP.addToPile(token)
                 
                 if line[index] == '>':
                     if line[index+1] == '=':
-                        token = Token('Operators', 'GreaterThanEqual', lineNum)
+                        token = Token('GreaterThanEqual', '>=', lineNum)
                         TokenP.addToPile(token)
                         index += 1
                     else:
-                        token = Token('Operators', 'GreaterThan', lineNum)
+                        token = Token('GreaterThan', '>', lineNum)
                         TokenP.addToPile(token)
                 
                 if line[index] == '-':
                     if line[index+1] == '>':
-                        token = Token('Operators', 'Arrow', lineNum)
+                        token = Token('Arrow', '->', lineNum)
                         TokenP.addToPile(token)
                         index += 1
                     else:
-                        token = Token('Operators', 'Minus', lineNum)
+                        token = Token('Minus', '-', lineNum)
                         TokenP.addToPile(token)
 
                 if line[index].isalpha():
@@ -76,31 +76,31 @@ def LexicalAnalyzer(filename):
                     while (line[index].isalpha() or line[index].isnumeric()) and index < len(line) and line[index] != ' ':
                         aux += line[index]
                         index += 1
-                    token = Token('Identifier', str(aux), lineNum)
+                    token = Token('ID', str(aux), lineNum)
                     if aux == 'fn':
-                        token = Token('ReservedWords', 'Function', lineNum)
+                        token = Token('Function', 'fn', lineNum)
                     if aux == 'let':
-                        token = Token('ReservedWords', 'Let', lineNum)
+                        token = Token('Let', 'let', lineNum)
                     if aux == 'println':
-                        token = Token('ReservedWords', 'Println', lineNum)
+                        token = Token('Println', 'println', lineNum)
                     if aux == 'print':
-                        token = Token('ReservedWords', 'Print', lineNum)
+                        token = Token('Print', 'print', lineNum)
                     if aux == 'main':
-                        token = Token('ReservedWords', 'Main', lineNum)
+                        token = Token('Main', 'main', lineNum)
                     if aux == 'return':
-                        token = Token('ReservedWords', 'Return', lineNum)
+                        token = Token('Return', 'return', lineNum)
                     if aux == 'char':
-                        token = Token('ReservedWords', 'Char', lineNum)
+                        token = Token('Char', 'char', lineNum)
                     if aux == 'int':
-                        token = Token('ReservedWords', 'Int', lineNum)
+                        token = Token('Int', 'int', lineNum)
                     if aux == 'float':
-                        token = Token('ReservedWords', 'Float', lineNum)
+                        token = Token('Float', 'float', lineNum)
                     if aux == 'if':
-                        token = Token('ReservedWords', 'If', lineNum)
+                        token = Token('If', 'if', lineNum)
                     if aux == 'else':
-                        token = Token('ReservedWords', 'Else', lineNum)
+                        token = Token('Else', 'else', lineNum)
                     if aux == 'while':
-                        token = Token('ReservedWords', 'While', lineNum)
+                        token = Token('While', 'while', lineNum)
                     TokenP.addToPile(token)
                     index -= 1
 
@@ -113,6 +113,16 @@ def LexicalAnalyzer(filename):
                     token = Token('CharConst', aux, lineNum)
                     if aux == '{'+'}':
                         token = Token('FormattedString', '{'+'}', lineNum)
+                    TokenP.addToPile(token)
+
+                if line[index] == "'":
+                    aux = ""
+                    index += 1
+                    while index < len(line) and line[index] != "'":
+                        aux += line[index]
+                        index += 1
+                    #print(aux)
+                    token = Token('CharConst', aux, lineNum)
                     TokenP.addToPile(token)
                 
                 if line[index].isnumeric():
@@ -137,8 +147,10 @@ def LexicalAnalyzer(filename):
         
     
     for p in TokenP.pile:
-        if(p.tokenind == "Error"):
-            print(p.tokenind, p.lexema, p.num_linha)
+        #if(p.tokenind == "Error"):
+        print(p.tokenind, p.lexema, p.num_linha)
+    
+    return TokenP
                 
 
-LexicalAnalyzer("tests/lexical_error.p")
+LexicalAnalyzer("tests/calculadora.p")
