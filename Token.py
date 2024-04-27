@@ -5,14 +5,6 @@ class Token:
         self.lexema = lexema
         self.num_linha = num_linha
 
-class TokenPile:
-
-    def __init__(self):
-        self.pile = []
-
-    def addToPile(self, token):
-        self.pile.append(token)
-
 class TokenDict:
 
     def __init__(self):
