@@ -5,7 +5,7 @@ from Token import *
 TokenP = []
 TokenD = TokenDict()
 
-TokenP = LexicalAnalyzer("tests/media.p")
+TokenP = LexicalAnalyzer("tests/fibonacci.p")
 
 DescidaRecursiva = syntaxAnalyzer(TokenP)
 

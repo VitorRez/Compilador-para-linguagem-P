@@ -1,4 +1,5 @@
 from Token import *
+import sys
 
 class syntaxAnalyzer:
 
@@ -9,9 +10,9 @@ class syntaxAnalyzer:
 
     def imprimeErro(self):
         print('Erro sintático. Token ' + self.TokenP[self.index].tokenind + ' não esperado na entrada.')
+        sys.exit()
 
     def match(self, token):
-        #print(token, self.TokenP[self.index].tokenind)
         if token == self.TokenP[self.index].tokenind:
             self.index += 1
             if self.index < len(self.TokenP):
