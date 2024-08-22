@@ -1,3 +1,4 @@
+from SymbolTable import *
 from Token import *
 import sys
 
@@ -5,18 +6,21 @@ class syntaxAnalyzer:
 
     def __init__(self, TokenP):
         self.TokenP = TokenP
-        self.CurrentToken = TokenP[0].tokenind
+        self.SymbolTable = SymbbolTable()
         self.index = 0
 
     def imprimeErro(self):
         print('Erro sintático. Token ' + self.TokenP[self.index].tokenind + ' não esperado na entrada.')
         sys.exit()
 
+    def imprimeErroS(self, message):
+        print(message)
+        sys.exit()
+
     def match(self, token):
         if token == self.TokenP[self.index].tokenind:
-            self.index += 1
             if self.index < len(self.TokenP):
-                token = self.TokenP[self.index].tokenind
+                self.index += 1
         else:
             self.imprimeErro()
         
@@ -26,7 +30,7 @@ class syntaxAnalyzer:
             self.FuncaoSeq()
             if(self.TokenP[self.index].tokenind == 'EOF'):
                 self.match('EOF')
-                print('Fim da análise sinetática')
+                print('Fim da análise sintática')
         else:
             self.imprimeErro()
 
@@ -36,36 +40,71 @@ class syntaxAnalyzer:
             self.FuncaoSeq()
 
     def Funcao(self):
+        num_args = 0
         if self.TokenP[self.index].tokenind == "Function":
             self.match("Function")
             self.match("ID")
+            name = self.TokenP[self.index-1].lexema
             self.match("LParen")
-            self.ListaParams()
+            num_args = self.ListaParams(num_args)
             self.match("RParen")
-            self.TipoRetornoFuncao()
+            return_type = self.TipoRetornoFuncao()
+            entry = SymbolTableEntry(
+                name,
+                return_type,
+                -1,
+                True,
+                num_args)
+            self.SymbolTable.insert(entry)
             self.Bloco()
         else:
             self.imprimeErro()
 
-    def ListaParams(self):
+    def ListaParams(self, param_count):
         if self.TokenP[self.index].tokenind == "ID":
+            param_name = self.TokenP[self.index].lexema
             self.match("ID")
             self.match("Colon")
-            self.Type()
-            self.ListaParams2()
+            param_type = self.Type()
+            param_pos = param_count
+            entry = SymbolTableEntry(
+                param_name,
+                param_type,
+                param_pos,
+                False,
+                0
+            )
+            self.SymbolTable.insert(entry)
+            param_count = self.ListaParams2(param_count)
+        return param_count + 1
         
-    def ListaParams2(self):
+        
+    def ListaParams2(self, param_count):
         if self.TokenP[self.index].tokenind == "Comma":
             self.match("Comma")
+            param_name = self.TokenP[self.index].lexema
             self.match("ID")
             self.match("Colon")
-            self.Type()
-            self.ListaParams2()
+            param_type = self.Type()
+            param_count += 1
+            param_pos = param_count
+            entry = SymbolTableEntry(
+                param_name,
+                param_type,
+                param_pos,
+                False,
+                0
+            )
+            self.SymbolTable.insert(entry)
+            param_count = self.ListaParams2(param_count)
+        return param_count
 
     def TipoRetornoFuncao(self):
+        tipo = -1
         if self.TokenP[self.index].tokenind == "Arrow":
             self.match("Arrow")
-            self.Type()
+            tipo = self.Type()
+        return tipo
     
     def Bloco(self):
         if self.TokenP[self.index].tokenind == "LBrace":
@@ -87,38 +126,54 @@ class syntaxAnalyzer:
 
     def Declaracao(self):
         if self.TokenP[self.index].tokenind == "Let":
+            var_names = []
             self.match("Let")
-            self.VarList()
+            self.VarList(var_names)
             self.match("Colon")
-            self.Type()
+            var_type = self.Type()
+            for var_name in var_names:
+                entry = SymbolTableEntry(
+                    var_name,  
+                    var_type,
+                    -1,
+                    False,
+                    0
+                )
+                self.SymbolTable.insert(entry)
             self.match("Semicolon")
         else:
             self.imprimeErro()
     
-    def VarList(self):
+    def VarList(self, var_names):
         if self.TokenP[self.index].tokenind == "ID":
+            var_names.append(self.TokenP[self.index].lexema)
             self.match("ID")
-            self.VarList2()
+            self.VarList2(var_names)
         else:
             self.imprimeErro()
 
-    def VarList2(self):
+    def VarList2(self, var_names):
         if self.TokenP[self.index].tokenind == "Comma":
             self.match("Comma")
+            var_names.append(self.TokenP[self.index].lexema)
             self.match("ID")
-            self.VarList2()
+            self.VarList2(var_names)
 
     def Type(self):
         if self.TokenP[self.index].tokenind == "Int":
             self.match("Int")
+            return(1)
         elif self.TokenP[self.index].tokenind == "Float":
             self.match("Float")
+            return(2)
         elif self.TokenP[self.index].tokenind == "Char":
             self.match("Char")
+            return(0)
         else:
             self.imprimeErro()
 
     def Comando(self):
+        arg_count = 0
         if self.TokenP[self.index].tokenind == "ID":
             self.match("ID")
             self.AtribuicaoOuChamada()
@@ -133,7 +188,7 @@ class syntaxAnalyzer:
             self.match("LParen")
             self.match("FormattedString")
             self.match("Comma")
-            self.ListaArgs()
+            self.ListaArgs(arg_count)
             self.match("RParen")
             self.match("Semicolon")
         elif self.TokenP[self.index].tokenind == "Println":
@@ -141,7 +196,7 @@ class syntaxAnalyzer:
             self.match("LParen")
             self.match("FormattedString")
             self.match("Comma")
-            self.ListaArgs()
+            self.ListaArgs(arg_count)
             self.match("RParen")
             self.match("Semicolon")
         elif self.TokenP[self.index].tokenind == "Return":
@@ -262,35 +317,51 @@ class syntaxAnalyzer:
         if self.TokenP[self.index].tokenind == "ID":
             self.match("ID")
             self.ChamadaFuncao()
+            return
         elif self.TokenP[self.index].tokenind == "IntConst":
             self.match("IntConst")
+            return
         elif self.TokenP[self.index].tokenind == "FloatConst":
             self.match("FloatConst")
+            return
         elif self.TokenP[self.index].tokenind == "CharConst":
             self.match("CharConst")
+            return
         elif self.TokenP[self.index].tokenind == "LParen":
             self.match("LParen")
             self.Expr()
             self.match("RParen")
+            return
         else:
             self.imprimeErro()
 
     def ChamadaFuncao(self):
+        num_args = 0
         if self.TokenP[self.index].tokenind == "LParen":
+            func_name = self.TokenP[self.index - 1].lexema
+            func_entry = self.SymbolTable.lookup(func_name)
+            if not func_entry or not func_entry.is_call:
+                self.imprimeErro()
             self.match("LParen")
-            self.ListaArgs()
+            num_args += self.ListaArgs(num_args)
+            if num_args != func_entry.num_args:
+                self.imprimeErroS(f"Erro na linha {self.TokenP[self.index-2].num_linha}: {func_entry.name} espera {func_entry.num_args} parametros, foram dados {num_args}.")
             self.match("RParen")
     
-    def ListaArgs(self):
+    def ListaArgs(self, num_args):
         if(self.TokenP[self.index].tokenind == "ID" or self.TokenP[self.index].tokenind == "IntConst" or
            self.TokenP[self.index].tokenind == "FloatConst" or self.TokenP[self.index].tokenind == "CharConst" or
            self.TokenP[self.index].tokenind == "LParen"):
             self.Fator()
-            self.ListaArgs2()
+            num_args += self.ListaArgs2(num_args)
+            num_args += 1
+        return num_args
     
-    def ListaArgs2(self):
+    def ListaArgs2(self, num_args):
         if self.TokenP[self.index].tokenind == "Comma":
             self.match("Comma")
             self.Fator()
-            self.ListaArgs2()
+            num_args += self.ListaArgs2(num_args)
+            num_args += 1
+        return num_args
         
