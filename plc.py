@@ -17,3 +17,4 @@ DescidaRecursiva = syntaxAnalyzer(TokenP)
 
 DescidaRecursiva.Programa()
 
+DescidaRecursiva.imprimeTabelas()
