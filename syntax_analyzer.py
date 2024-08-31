@@ -1,5 +1,6 @@
 from SymbolTable import *
 from Token import *
+from ASA import *
 import sys
 
 class syntaxAnalyzer:
@@ -28,12 +29,16 @@ class syntaxAnalyzer:
             self.imprimeErro()
         
     def Programa(self):
+        global vecArvores
+        vecArvores = [] 
+
         if self.TokenP[self.index].tokenind == "Function":
             self.Funcao()
             self.FuncaoSeq()
             if(self.TokenP[self.index].tokenind == 'EOF'):
                 self.match('EOF')
                 print('Fim da análise sintática')
+                for i in vecArvores: print(i)
         else:
             self.imprimeErro()
 
@@ -43,9 +48,13 @@ class syntaxAnalyzer:
             self.FuncaoSeq()
 
     def Funcao(self):
+        global vecArvores
+        
         num_args = 0
         if self.TokenP[self.index].tokenind == "Function":
             self.match("Function")
+            noFunc = NoFuncao()
+            vecArvores.append(noFunc)
             self.match("ID")
             self.current_function = self.TokenP[self.index-1].lexema
             if self.current_function in self.function_tables.keys():
@@ -66,7 +75,8 @@ class syntaxAnalyzer:
                 num_args,
                 args)
             self.GlobalTable.insert(entry)
-            self.Bloco()
+            noBloco = self.Bloco()
+            noFunc.addFilho(noBloco)
         else:
             self.imprimeErro()
 
@@ -121,22 +131,29 @@ class syntaxAnalyzer:
         return tipo
     
     def Bloco(self):
+        no = NoBloco()
+
         if self.TokenP[self.index].tokenind == "LBrace":
             self.match("LBrace")
-            self.Sequencia()
+            self.Sequencia(no)
+            print(f'flhos Bloco: {no.children}') #pra verificar se precisa de um retorno na linha de cima
             self.match("RBrace")
         else:
             self.imprimeErro()
 
-    def Sequencia(self):
+        return no
+
+    def Sequencia(self, noBloco=None): #n sei se precisar desse valor padrao
         if self.TokenP[self.index].tokenind == "Let":
-            self.Declaracao()
-            self.Sequencia()
+            seq = self.Declaracao()
+            noBloco.addFilho(seq)
+            self.Sequencia(noBloco)
         elif(self.TokenP[self.index].tokenind == "ID" or self.TokenP[self.index].tokenind == "If" or
              self.TokenP[self.index].tokenind == "While" or self.TokenP[self.index].tokenind == "Print" or
              self.TokenP[self.index].tokenind == "Println" or self.TokenP[self.index].tokenind == "Return"):
-            self.Comando()
-            self.Sequencia()
+            seq = self.Comando()
+            noBloco.addFilho(seq)
+            self.Sequencia(noBloco)
 
     def Declaracao(self):
         if self.TokenP[self.index].tokenind == "Let":
@@ -197,19 +214,28 @@ class syntaxAnalyzer:
         args = ["sys_call(print)"]
         if self.TokenP[self.index].tokenind == "ID":
             self.match("ID")
-            self.AtribuicaoOuChamada()
+            noId = NoId()
+            node = self.AtribuicaoOuChamada(noId)
+            return node
         elif self.TokenP[self.index].tokenind == "If":
-            self.ComandoIf()
+            node = self.ComandoIf()
+            return node
         elif self.TokenP[self.index].tokenind == "While":
             self.match("While")
-            self.Expr()
-            self.Bloco()
+            noWhile = NoWhile()
+            expr = self.Expr()
+            bloco = self.Bloco()
+            noWhile.addFilho(expr)
+            noWhile.addFilho(bloco)
+            return noWhile
         elif self.TokenP[self.index].tokenind == "Print":
             self.match("Print")
+            noPrint = NoPrint()
             self.match("LParen")
             self.match("FormattedString")
             self.match("Comma")
-            self.ListaArgs(arg_count, args)
+            argFilhos = self.ListaArgs(arg_count, args)
+            noPrint.addFilho(argFilhos)
             self.match("RParen")
             self.match("Semicolon")
             entry = SymbolTableEntry(
@@ -221,12 +247,15 @@ class syntaxAnalyzer:
                 args
             )
             self.function_tables[self.current_function].insert(entry)
+            return noPrint
         elif self.TokenP[self.index].tokenind == "Println":
             self.match("Println")
+            noPrint = NoPrint()
             self.match("LParen")
             self.match("FormattedString")
             self.match("Comma")
-            self.ListaArgs(arg_count, args)
+            argsFilho = self.ListaArgs(arg_count, args)
+            noPrint.addFilho(argsFilho)
             self.match("RParen")
             self.match("Semicolon")
             entry = SymbolTableEntry(
@@ -238,144 +267,206 @@ class syntaxAnalyzer:
                 args
             )
             self.function_tables[self.current_function].insert(entry)
+            return noPrint
         elif self.TokenP[self.index].tokenind == "Return":
             self.match("Return")
-            self.Expr()
+            noReturn = NoReturn()
+            expr = self.Expr()
+            noReturn.addFilho(expr)
             self.match("Semicolon")
+            return noReturn
         else:
             self.imprimeErro()
     
-    def AtribuicaoOuChamada(self):
+    def AtribuicaoOuChamada(self, id):
         if self.TokenP[self.index].tokenind == "Assign":
             self.match("Assign")
-            self.Expr()
+            noAssign = NoAssign()
+            noAssign.addFilho(id)
+            noExpr = self.Expr()
+            noAssign.addFilho(noExpr)
             self.match("Semicolon")
+            return noAssign
         elif self.TokenP[self.index].tokenind == "LParen":
             self.match("LParen")
-            self.ListaArgs(0, [])
+            noCall = NoCall()
+            args = self.ListaArgs(0, [])
+            noCall.addFilho(args)
             self.match("RParen")
+            return noCall
         else:
             self.imprimeErro()
     
     def ComandoIf(self):
         if self.TokenP[self.index].tokenind == "If":
             self.match("If")
-            self.Expr()
-            self.Bloco()
-            self.ComandoSenao()
+            noIf = NoIf()
+            condicao = self.Expr()
+            bloco = self.Bloco()
+            senao = self.ComandoSenao()
+            noIf.addFilho(condicao, bloco, senao)
+            return noIf
         elif self.TokenP[self.index].tokenind == "LBrace":
             self.match("LBrace")
-            self.Sequencia()
+            noBloco = NoBloco()
+            seq = self.Sequencia()
+            noBloco.addFilho(seq)
             self.match("RBrace")
+            return noBloco
         else:
             self.imprimeErro()
 
     def ComandoSenao(self):
         if self.TokenP[self.index].tokenind == "Else":
             self.match("Else")
-            self.ComandoIf()
+            blocoSeNao = self.ComandoIf()
+            return blocoSeNao 
     
     def Expr(self):
-        self.Rel()
-        self.ExprOpc()
+        rel = self.Rel()
+        expr = self.ExprOpc(rel)
+        return expr
 
-    def ExprOpc(self):
+    def ExprOpc(self, operando):
         if self.TokenP[self.index].tokenind == "Equal" or self.TokenP[self.index].tokenind == "NotEqual":
-            self.OpIgual()
-            self.Rel()
-            self.ExprOpc()
+            noIgual = self.OpIgual()
+            noIgual.addFilho(operando)
+            rel = self.Rel()
+            noIgual.addFilho(rel)
+            self.ExprOpc(noIgual)
+        else:
+            return operando
 
     def OpIgual(self):
         if self.TokenP[self.index].tokenind == "Equal":
             self.match("Equal")
+            noRel = NoRelOp('==')
+            return noRel
         elif self.TokenP[self.index].tokenind == "NotEqual":
             self.match("NotEqual")
+            noRel = NoRelOp('!=')
+            return noRel
         else:
             self.imprimeErro()
     
     def Rel(self):
-        self.Adicao()
-        self.RelOpc()
+        adicao = self.Adicao()
+        rel = self.RelOpc(adicao)
+        return rel
 
-    def RelOpc(self):
+    def RelOpc(self, operando):
         if(self.TokenP[self.index].tokenind == "LessThan" or self.TokenP[self.index].tokenind == "LessThanEqual" or
            self.TokenP[self.index].tokenind == "GreaterThan" or self.TokenP[self.index].tokenind == "GreaterThanEqual"):
-            self.OpRel()
-            self.Adicao()
-            self.RelOpc()
+            opRel = self.OpRel()
+            opRel.addFilho(operando)
+            operando2 = self.Adicao()
+            opRel.addFilho(operando2)
+            self.RelOpc(opRel)
+        else:
+            return operando
     
     def OpRel(self):
         if self.TokenP[self.index].tokenind == "LessThan":
             self.match("LessThan")
+            noRel = NoRelOp('<')
+            return noRel
         elif self.TokenP[self.index].tokenind == "LessThanEqual":
             self.match("LessThanEqual")
+            noRel = NoRelOp('<=')
+            return noRel
         elif self.TokenP[self.index].tokenind == "GreaterThan":
             self.match("GreaterThan")
+            noRel = NoRelOp('>')
+            return noRel
         elif self.TokenP[self.index].tokenind == "GreaterThanEqual":
             self.match("GreaterThanEqual")
+            noRel = NoRelOp('>=')
+            return noRel
         else:
             self.imprimeErro()
 
     def Adicao(self):
-        self.Termo()
-        self.AdicaoOpc()
+        termo = self.Termo()
+        adic = self.AdicaoOpc(termo)
+        return adic
 
-    def AdicaoOpc(self):
+    def AdicaoOpc(self, operando):
         if(self.TokenP[self.index].tokenind == "Plus" or self.TokenP[self.index].tokenind == "Minus"):
-            self.OpAdicao()
-            self.Termo()
-            self.AdicaoOpc()
+            noAdic = self.OpAdicao()
+            noAdic.addFilho(operando)
+            operando2 = self.Termo()
+            noAdic.addFilho(operando2)
+            self.AdicaoOpc(noAdic)
+        else:
+            return operando
 
     def OpAdicao(self):
         if self.TokenP[self.index].tokenind == "Plus":
             self.match("Plus")
+            noArith = NoArithOp('+')
+            return noArith
         elif self.TokenP[self.index].tokenind == "Minus":
             self.match("Minus")
+            noArith = NoArithOp('-')
+            return noArith
         else:
             self.imprimeErro()
     
     def Termo(self):
-        self.Fator()
-        self.TermoOpc()
+        fator = self.Fator()
+        termo = self.TermoOpc(fator)
+        return termo
 
-    def TermoOpc(self):
+    def TermoOpc(self, operando):
         if(self.TokenP[self.index].tokenind == "Multiplication" or self.TokenP[self.index].tokenind == "Division"):
-            self.OpMult()
-            self.Fator()
-            self.TermoOpc()
+            noMult = self.OpMult()
+            noMult.addFilho(operando)
+            operando2 = self.Fator()
+            noMult.addFilho(operando2)
+            self.TermoOpc(noMult)
+        else:
+            return operando
     
     def OpMult(self):
         if self.TokenP[self.index].tokenind == "Multiplication":
             self.match("Multiplication")
+            noArith = NoArithOp('*')
+            return noArith
         elif self.TokenP[self.index].tokenind == "Division":
             self.match("Division")
+            noArith = NoArithOp('/')
+            return noArith
         else:
             self.imprimeErro()
 
     def Fator(self):
         if self.TokenP[self.index].tokenind == "ID":
             self.match("ID")
-            self.ChamadaFuncao()
-            return
+            noId = NoId()
+            callNode = self.ChamadaFuncao(noId)
+            return callNode
         elif self.TokenP[self.index].tokenind == "IntConst":
             self.match("IntConst")
-            return
+            noInt = NoIntConst()
+            return noInt
         elif self.TokenP[self.index].tokenind == "FloatConst":
             self.match("FloatConst")
-            return
+            noFloat = NoFloatConst()
+            return noFloat
         elif self.TokenP[self.index].tokenind == "CharConst":
             self.match("CharConst")
-            return
+            noChar = NoCharConst()
+            return noChar
         elif self.TokenP[self.index].tokenind == "LParen":
             print("fator")
             self.match("LParen")
-            self.Expr()
+            expr = self.Expr()
             self.match("RParen")
-            return
+            return expr
         else:
             self.imprimeErro()
 
-    def ChamadaFuncao(self):
+    def ChamadaFuncao(self, noId=None):
         num_args = 0
         if self.TokenP[self.index].tokenind == "LParen":
             func_name = self.TokenP[self.index-1].lexema
@@ -383,8 +474,10 @@ class syntaxAnalyzer:
             if not func_entry or not func_entry.is_call:
                 self.imprimeErro()
             self.match("LParen")
+            callNode = NoCall()
             args = []
-            num_args += self.ListaArgs(num_args, args)
+            num_args += self.ListaArgs(num_args, args, callNode)
+            print(f'args: {callNode.children}')
             if num_args != func_entry.num_args:
                 self.imprimeErroS(f"Erro na linha {self.TokenP[self.index-2].num_linha}: {func_entry.name} espera {func_entry.num_args} parametros, foram dados {num_args}.")
             entry = SymbolTableEntry(
@@ -397,23 +490,29 @@ class syntaxAnalyzer:
             )
             self.function_tables[self.current_function].insert(entry)
             self.match("RParen")
+
+            return callNode
+        else:
+            return noId
     
-    def ListaArgs(self, num_args, args):
+    def ListaArgs(self, num_args, args, noCall=None):
         if(self.TokenP[self.index].tokenind == "ID" or self.TokenP[self.index].tokenind == "IntConst" or
            self.TokenP[self.index].tokenind == "FloatConst" or self.TokenP[self.index].tokenind == "CharConst" or
            self.TokenP[self.index].tokenind == "LParen"):
             args.append(self.TokenP[self.index].lexema)
-            self.Fator()
-            num_args += self.ListaArgs2(num_args, args)
+            fator = self.Fator()
+            if noCall != None: noCall.addFilho(fator)
+            num_args += self.ListaArgs2(num_args, args, noCall)
             num_args += 1
         return num_args
     
-    def ListaArgs2(self, num_args, args):
+    def ListaArgs2(self, num_args, args, noCall):
         if self.TokenP[self.index].tokenind == "Comma":
             self.match("Comma")
             args.append(self.TokenP[self.index].lexema)
-            self.Fator()
-            num_args += self.ListaArgs2(num_args, args)
+            fator = self.Fator()
+            if noCall != None: noCall.addFilho(fator)
+            num_args += self.ListaArgs2(num_args, args, noCall)
             num_args += 1
         return num_args
     

@@ -1,219 +1,138 @@
-class No: 
+class AstNode: 
     def __init__(self, nome):
         self.nome = nome
         self.children = [] #vetor de filhos  
         self.value = 0
         self.op = None
+        self.dataType = None
 
-    def __str__(self, level=0):
-        ret = "   "*level+ repr(self) +"\n"
-        if self.op != None: 
-            ret += "   "*level+ self.op +"\n"
-            level += 1
-        for child in self.children:
-            if (child != None):
-                ret += child.__str__(level+1) #level+1
-        return ret
+    def addFilho(self, filho):
+        self.children.append(filho)
 
-class NoPrograma(No):
-    def __init__(self, filhos): #filho é um vetor com NoFuncão
-        No.__init__(self, 'Programa')
-        self.children = filhos
+    # def __str__(self, level=0):
+    #     ret = "   "*level+ repr(self) +"\n"
+    #     if self.op != None: 
+    #         ret += "   "*level+ self.op +"\n"
+    #         level += 1
+    #     for child in self.children:
+    #         if (child != None):
+    #             ret += child.__str__(level+1) #level+1
+    #     return ret
 
-    def __repr__(self):
-        return 'Programa'
-
-class NoFuncao(No):
-    def __init__(self, filhos):
-        No.__init__(self, 'Funcao')
-        self.children = filhos
+class NoFuncao(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Funcao')
 
     def __repr__(self) -> str:
         return 'Funcao'
 
-class NoFuncaoSeq(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'FuncaoSeq')
-        self.children = filhos
+class NoRelOp(AstNode):
+    def __init__(self, op):
+        AstNode.__init__(self, 'RelOp')
+        self.op = op
 
     def __repr__(self) -> str:
-        return 'FuncaoSeq'
+        return 'RelOp'
 
-class NoListaParams(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'ListaParams')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'ListaParams'
-
-class NoTipoRetornoFuncao(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'TipoRetornoFuncao')
-        self.children = filhos
+class NoArithOp(AstNode):
+    def __init__(self, op):
+        AstNode.__init__(self, 'NoArithOp')
+        self.op = op
 
     def __repr__(self) -> str:
-        return 'TipoRetornoFuncao'
+        return 'NoArithOp'
 
-class NoListaParams2(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'ListaParams2')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'ListaParams2'
-
-class NoType(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'Type')
-        self.children = filhos
+class NoAssign(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Assign')
 
     def __repr__(self) -> str:
-        return 'Type'
+        return 'Assign'
 
-class NoBloco(No):
-    def __init__(self, left, right):
-        No.__init__(self, 'Bloco')
-        self.children.append(left)
-        self.children.append(right)
+class NoIf(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'If')
+
+    def addFilho(self, left, right, senao=None): #talvez n precise desse valor padrao
+        self.children.append(left) #Condição do if
+        self.children.append(right) #Comandos da parte verdadeira
+
+        if senao != None: self.children.append(senao) #Comandos da parte false
+    
+    def __repr__(self) -> str:
+        return 'If'
+
+class NoWhile(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'While')
+
+    def __repr__(self) -> str:
+        return 'While'
+
+class NoPrint(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Print')
+
+    def attPularLinha(self, pularLinha):
+        self.pularLinha = pularLinha
+
+    def __repr__(self) -> str:
+        return 'Print'
+
+class NoReturn(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Return')
+
+    def __repr__(self) -> str:
+        return 'Return'
+
+class NoCall(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Call')
+
+    def __repr__(self) -> str:
+        return 'Call'
+
+class NoBloco(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Bloco')
+        
+    # def addFilho(self, filho): #filho é um vetor
+    #     self.children = filho
 
     def __repr__(self) -> str:
         return 'Bloco'
 
-class NoSequencia(No):
-    def __init__(self, left, right):
-        No.__init__(self, 'Sequencia')
-        self.children.append(left)
-        self.children.append(right)
+
+class NoId(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'Id')
+        # self.lexema = lexema
+        # print(f'lex: {self.lexema}')
 
     def __repr__(self) -> str:
-        return 'Sequencia'
+        return 'Id'
 
-class NoDeclaracao(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'Declaracao')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'Declaracao'
-
-class VarList(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'VarList')
-        self.children = filhos
+class NoIntConst(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'IntConst')
+        self.dataType = 'Int'
 
     def __repr__(self) -> str:
-        return 'VarList'
+        return 'IntConst'
 
-class NoVarList2(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'VarList2')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'VarList2'
-
-class NoComando(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'Comando')
-        self.children = filhos
+class NoFloatConst(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'FloatConst')
+        self.dataType = 'Float'
 
     def __repr__(self) -> str:
-        return 'Comando'
+        return 'FloatConst'
 
-class NoAtribuicaoChamada(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'AtribuicaoChamada')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'AtribuicaoChamada'
-
-class NoComandoIf(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'ComandoIf')
-        self.children = filhos
+class NoCharConst(AstNode):
+    def __init__(self):
+        AstNode.__init__(self, 'CharConst')
+        self.dataType = 'Char'
 
     def __repr__(self) -> str:
-        return 'ComandoIf'
-
-class NoComandoSenao(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'ComandoSenao')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'ComandoSenao'
-
-class NoExprAritmetica(No): #talvez mudar depois
-    def __init__(self, op, left, right):
-        No.__init__(self,'ExprAritmetica')
-        self.children.append(left)
-        self.children.append(right)
-        self.op = op
-
-    def __repr__(self):
-        return "ExprAritmetica: " 
-        
-class NoExprOpc(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'ExprOpc')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'ExprOpc'
-
-class NoOpIgual(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'OpIgual')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'OpIgual'
-
-class NoRel(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'Rel')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'Rel'
-
-class NoRelOpc(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'RelOpc')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'RelOpc'
-
-class NoOpRel(No):
-    def __init__(self, filhos):    
-        No.__init__(self, 'OpRel')
-        self.children = filhos
-
-    def __repr__(self) -> str:
-        return 'OpRel'
-
-class NoId(No):
-    def __init__(self, nome):
-        No.__init__(self,nome)
-
-    def __repr__(self):
-        return "NoId: " + str(self.nome) 
-
-class NoIntConst(No):
-    def __init__(self, value):
-        No.__init__(self,"NoInt")
-        self.value = value
-
-    def __repr__(self):
-        return "NoInt: " + str(self.value)
-
-class NoFloatConst(No):
-    def __init__(self, value):
-        No.__init__(self,"NoFloat")
-        self.value = value
-
-    def __repr__(self):
-        return "NoFloat: " + str(self.value)
+        return 'CharConst'

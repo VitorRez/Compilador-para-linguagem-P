@@ -1,3 +1,5 @@
+#Tabela só terá os paramentros, e variáveis locais
+
 class SymbolTableEntry:
     def __init__(self, name, data_type, param_pos, is_call, num_args, args):
         self.name = name
