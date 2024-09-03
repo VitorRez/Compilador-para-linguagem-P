@@ -1,0 +1,45 @@
+Fim da análise sintática
+
+Árvores de Sintaxe Abstrata (ASA):
+
+Árvore 1:
+
+Funcao
+   Bloco
+      Declare a : 2
+      Declare b : 2
+      Declare c : 2
+      Declare media : 2
+      Assign
+         Id -> a : 2
+         FloatConst
+      Assign
+         Id -> b : 2
+         FloatConst
+      Assign
+         Id -> c : 2
+         FloatConst
+      Assign
+         Id -> media : 2
+         NoArithOp
+            Op: /
+            NoArithOp
+               Op: +
+               Id -> a : 2
+               Id -> b : 2
+            FloatConst
+      Print
+         1
+
+
+Tabelas de Símbolos:
+
+Tabela de símbolos da função main:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+a              | a              | 2              | -1             | False          | -1             | []
+b              | b              | 2              | -1             | False          | -1             | []
+c              | c              | 2              | -1             | False          | -1             | []
+media          | media          | 2              | -1             | False          | -1             | []
+println        | println        | -1             | -1             | True           | 2              | ['sys_call(print)', 'media']
+

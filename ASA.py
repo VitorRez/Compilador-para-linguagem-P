@@ -9,15 +9,27 @@ class AstNode:
     def addFilho(self, filho):
         self.children.append(filho)
 
-    # def __str__(self, level=0):
-    #     ret = "   "*level+ repr(self) +"\n"
-    #     if self.op != None: 
-    #         ret += "   "*level+ self.op +"\n"
-    #         level += 1
-    #     for child in self.children:
-    #         if (child != None):
-    #             ret += child.__str__(level+1) #level+1
-    #     return ret
+    def to_string(self, level=0):
+        try:
+            ret = "   " * level + repr(self) + " -> " + str(self.lexema) + " : " + str(self.dataType) + "\n"
+        except:
+            ret = "   " * level + repr(self) + "\n"
+        if self.op:
+            ret += "   " * (level + 1) + "Op: " + self.op + "\n"
+        for child in self.children:
+            if isinstance(child, AstNode):
+                ret += child.to_string(level + 1)
+            else:
+                if isinstance(child, list):
+                    for i in child:
+                        ret += "   " * (level + 1) + "Declare " + str(i.lexema) + " : " + str(i.dataType) + "\n"
+                else:
+                    ret += "   " * (level + 1) + str(child) + "\n"
+                        
+        return ret
+
+    def __str__(self):
+        return self.to_string()
 
 class NoFuncao(AstNode):
     def __init__(self):
@@ -116,7 +128,7 @@ class NoId(AstNode):
 class NoIntConst(AstNode):
     def __init__(self):
         AstNode.__init__(self, 'IntConst')
-        self.dataType = 'Int'
+        self.dataType = 1
 
     def __repr__(self) -> str:
         return 'IntConst'
@@ -124,7 +136,7 @@ class NoIntConst(AstNode):
 class NoFloatConst(AstNode):
     def __init__(self):
         AstNode.__init__(self, 'FloatConst')
-        self.dataType = 'Float'
+        self.dataType = 2
 
     def __repr__(self) -> str:
         return 'FloatConst'
@@ -132,7 +144,7 @@ class NoFloatConst(AstNode):
 class NoCharConst(AstNode):
     def __init__(self):
         AstNode.__init__(self, 'CharConst')
-        self.dataType = 'Char'
+        self.dataType = 0
 
     def __repr__(self) -> str:
         return 'CharConst'

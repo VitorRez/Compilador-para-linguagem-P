@@ -1,0 +1,99 @@
+Fim da análise sintática
+
+Árvores de Sintaxe Abstrata (ASA):
+
+Árvore 1:
+
+Funcao
+   Bloco
+      If
+         RelOp
+            Op: ==
+            Id -> op : 0
+            CharConst
+         Bloco
+            Return
+               NoArithOp
+                  Op: +
+                  Id -> x : 2
+                  Id -> y : 2
+         If
+            RelOp
+               Op: ==
+               Id -> op : 0
+               CharConst
+            Bloco
+               Return
+                  NoArithOp
+                     Op: -
+                     Id -> x : 2
+                     Id -> y : 2
+            If
+               RelOp
+                  Op: ==
+                  Id -> op : 0
+                  CharConst
+               Bloco
+                  Return
+                     NoArithOp
+                        Op: *
+                        Id -> x : 2
+                        Id -> y : 2
+               If
+                  RelOp
+                     Op: ==
+                     Id -> op : 0
+                     CharConst
+                  Bloco
+                     If
+                        RelOp
+                           Op: ==
+                           Id -> y : 2
+                           FloatConst
+                        Bloco
+                           Return
+                              FloatConst
+                     Return
+                        NoArithOp
+                           Op: /
+                           Id -> x : 2
+                           Id -> y : 2
+      Return
+         FloatConst
+
+Árvore 2:
+
+Funcao
+   Bloco
+      Declare a : 2
+      Declare b : 2
+      Assign
+         Id -> a : 2
+         FloatConst
+      Assign
+         Id -> b : 2
+         FloatConst
+      Declare c : 1
+      Print
+         1
+
+
+Tabelas de Símbolos:
+
+Tabela de símbolos da função calculadora:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+op             | op             | 0              | 0              | False          | -1             | []
+x              | x              | 2              | 1              | False          | -1             | []
+y              | y              | 2              | 2              | False          | -1             | []
+
+
+Tabela de símbolos da função main:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+a              | a              | 2              | -1             | False          | -1             | []
+b              | b              | 2              | -1             | False          | -1             | []
+c              | c              | 1              | -1             | False          | -1             | []
+calculadora    | calculadora    | 2              | -1             | True           | 3              | ['*', 'a', 'b']
+println        | println        | -1             | -1             | True           | 2              | ['sys_call(print)', 'calculadora']
+

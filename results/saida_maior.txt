@@ -1,0 +1,55 @@
+Fim da análise sintática
+
+Árvores de Sintaxe Abstrata (ASA):
+
+Árvore 1:
+
+Funcao
+   Bloco
+      Declare m : 1
+      Assign
+         Id -> m : 1
+         Id -> a : 1
+      If
+         RelOp
+            Op: >
+            Id -> b : 1
+            Id -> m : 1
+         Bloco
+      Return
+         Id -> m : 1
+
+Árvore 2:
+
+Funcao
+   Bloco
+      Declare x : 1
+      Declare y : 1
+      Assign
+         Id -> x : 1
+         IntConst
+      Assign
+         Id -> y : 1
+         IntConst
+      Print
+         1
+
+
+Tabelas de Símbolos:
+
+Tabela de símbolos da função maior:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+a              | a              | 1              | 0              | False          | -1             | []
+b              | b              | 1              | 1              | False          | -1             | []
+m              | m              | 1              | -1             | False          | -1             | []
+
+
+Tabela de símbolos da função main:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+x              | x              | 1              | -1             | False          | -1             | []
+y              | y              | 1              | -1             | False          | -1             | []
+maior          | maior          | 1              | -1             | True           | 2              | ['x', 'y']
+print          | print          | -1             | -1             | True           | 2              | ['sys_call(print)', 'maior']
+

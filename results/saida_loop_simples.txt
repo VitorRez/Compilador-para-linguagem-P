@@ -1,0 +1,36 @@
+Fim da análise sintática
+
+Árvores de Sintaxe Abstrata (ASA):
+
+Árvore 1:
+
+Funcao
+   Bloco
+      Declare i : 1
+      Assign
+         Id -> i : 1
+         IntConst
+      While
+         RelOp
+            Op: <
+            Id -> i : 1
+            IntConst
+         Bloco
+            Print
+               1
+            Assign
+               Id -> i : 1
+               NoArithOp
+                  Op: *
+                  Id -> i : 1
+                  IntConst
+
+
+Tabelas de Símbolos:
+
+Tabela de símbolos da função main:
+Chave          | Nome           | Tipo           | Param. Pos     | Call           | Num. Args      | Args
+---------------------------------------------------------------------------------------------------------------------
+i              | i              | 1              | -1             | False          | -1             | []
+println        | println        | -1             | -1             | True           | 2              | ['sys_call(print)', 'i']
+
